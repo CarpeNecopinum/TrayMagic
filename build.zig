@@ -27,4 +27,12 @@ pub fn build(b: *std.build.Builder) void {
 
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
+
+    const test_cmd = b.addTest("src/magic.zig");
+    test_cmd.setTarget(target);
+    test_cmd.setBuildMode(mode);
+
+    const test_step = b.step("test", "Test the app");
+    test_step.dependOn(&test_cmd.step);
+
 }

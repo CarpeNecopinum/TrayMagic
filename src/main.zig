@@ -1,16 +1,14 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
 
+const magics = @import("magics.zig").magics;
+
 fn print_list(list: ?*gtk.GList) void {
     var cur = list;
     while (cur) |node| {
         std.debug.print("{s}\n", .{@ptrCast([*:0]u8, node.*.data)});
         cur = @ptrCast(?*gtk.GList, node.*.next);
     }
-}
-
-fn hello(item: ?*gtk.GtkWidget, user_data: ?*c_void) void {
-    std.debug.print("Hello World!\n", .{});
 }
 
 pub fn main() anyerror!void {
@@ -29,15 +27,11 @@ pub fn main() anyerror!void {
     gtk.app_indicator_set_status(indicator, .APP_INDICATOR_STATUS_ACTIVE);
 
     var menu = gtk.gtk_menu_new();
-    var item1 = gtk.gtk_image_menu_item_new_with_label("Hello World!");
-    gtk.gtk_menu_shell_insert(@ptrCast(*gtk.GtkMenuShell, menu), item1, 1);
-    gtk.gtk_widget_show(item1);
 
-
-    _ = gtk.g_signal_connect_1(item1, "activate", @ptrCast(gtk.GCallback, hello), null);
-
+    for (magics) |magic| {
+        magic.addToMenu(@ptrCast(*gtk.GtkMenu, menu));
+    }
 
     gtk.app_indicator_set_menu(indicator, @ptrCast(*gtk.GtkMenu, menu));
-
     gtk.gtk_main();
 }
