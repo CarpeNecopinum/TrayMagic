@@ -1,7 +1,9 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
 
-const magics = @import("magics.zig").magics;
+const buildMagics = @import("magics.zig").buildMagics;
+
+pub const io_mode = .evented;
 
 fn print_list(list: ?*gtk.GList) void {
     var cur = list;
@@ -12,6 +14,10 @@ fn print_list(list: ?*gtk.GList) void {
 }
 
 pub fn main() anyerror!void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    //defer _ = gpa.deinit();
+    const allocator = &gpa.allocator;
+
     var app = gtk.gtk_application_new("com.github.carpenecopinum.traymagic", .G_APPLICATION_FLAGS_NONE);
     defer gtk.g_object_unref(app);
 
@@ -27,6 +33,8 @@ pub fn main() anyerror!void {
     gtk.app_indicator_set_status(indicator, .APP_INDICATOR_STATUS_ACTIVE);
 
     var menu = gtk.gtk_menu_new();
+
+    const magics = try buildMagics(allocator);
 
     for (magics) |magic| {
         magic.addToMenu(@ptrCast(*gtk.GtkMenu, menu));
