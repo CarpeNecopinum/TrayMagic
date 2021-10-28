@@ -138,8 +138,7 @@ const SubmenuMagic = struct {
     }
 
 
-    pub fn addToMenu(self: *Self, menu: ?*c.GtkMenu) void {
-
+    pub fn addToMenu(self: *Self, menu: *c.GtkMenu) void {
         var submenu = c.gtk_menu_new();
         for (self.entries) |entry| {
             entry.addToMenu(@ptrCast(*c.GtkMenu, submenu));
