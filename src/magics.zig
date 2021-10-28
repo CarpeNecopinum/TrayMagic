@@ -131,11 +131,62 @@ const InterruptibleCommandMagic = struct {
     }
 };
 
+const SubmenuMagic = struct {
+    const Self = @This();
+
+    allocator: *std.mem.Allocator,  
+    title: [:0]const u8,
+    entries: []MagicTrait,
+
+
+    fn init(allocator: *std.mem.Allocator, title: [:0]const u8, entries: []MagicTrait) !*Self {
+        var entries_copy = try allocator.alloc(MagicTrait, entries.len);
+        for (entries) |entry, i| entries_copy[i] = entry;
+
+        var result = try allocator.create(Self);
+        result.* = Self{
+            .allocator = allocator,
+            .title = title,
+            .entries = entries_copy
+        };
+        return result;
+    }
+
+    fn deinit(self: *Self) void {
+        self.allocator.free(entries);
+        self.allocator.destroy(self);
+    }
+
+    fn activate(self: *@This(), menu: *c.GtkMenu) callconv(.C) void {
+        std.debug.print("Activated.", .{});
+    }
+
+
+    pub fn addToMenu(self: *Self, menu: ?*c.GtkMenu) void {
+
+        var submenu = c.gtk_menu_new();
+        for (self.entries) |entry| {
+            entry.addToMenu(@ptrCast(*c.GtkMenu, submenu));
+        }
+
+        var item = c.gtk_image_menu_item_new_with_label(self.title);
+        c.gtk_menu_shell_insert(@ptrCast(*c.GtkMenuShell, menu), item, 1);
+        c.gtk_widget_show(item);
+        c.gtk_menu_item_set_submenu(@ptrCast(*c.GtkMenuItem, item), submenu);
+    }
+
+};
+
 pub fn buildMagics(allocator: *std.mem.Allocator) ![]MagicTrait {
-    var magics = try allocator.alloc(MagicTrait, 2);
+    var magics = try allocator.alloc(MagicTrait, 3);
     //magics[0] = MagicTrait.create(try HelloMagic.init(allocator));
     magics[0] = MagicTrait.create(try SingleCommandMagic.init(allocator, "Hello (Command)", "echo 'Hello World'"));
     magics[1] = MagicTrait.create(try InterruptibleCommandMagic.init(allocator, "Hello (Checkable)", "watch echo 'Hello World'"));
+    magics[2] = MagicTrait.create(try SubmenuMagic.init(allocator, "External Monitor", &.{
+        MagicTrait.create(try SingleCommandMagic.init(allocator, "Clone", "monitor-on")),
+        MagicTrait.create(try SingleCommandMagic.init(allocator, "Combine", "monitor-combine")),
+        MagicTrait.create(try SingleCommandMagic.init(allocator, "Disable", "monitor-off"))
+    }));
 
     return magics;
 }
