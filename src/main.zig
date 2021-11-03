@@ -1,7 +1,8 @@
 const std = @import("std");
 const gtk = @import("gtk.zig");
 
-const buildMagics = @import("magics.zig").buildMagics;
+const buildOptions = @import("build_options");
+const buildMagics = @import(buildOptions.magics_config).buildMagics;
 
 pub const io_mode = .evented;
 
@@ -15,7 +16,7 @@ fn print_list(list: ?*gtk.GList) void {
 
 pub fn main() anyerror!void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    //defer _ = gpa.deinit();
+    defer _ = gpa.deinit();
     const allocator = &gpa.allocator;
 
     var app = gtk.gtk_application_new("com.github.carpenecopinum.traymagic", .G_APPLICATION_FLAGS_NONE);

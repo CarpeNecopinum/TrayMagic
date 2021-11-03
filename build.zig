@@ -25,6 +25,14 @@ pub fn build(b: *std.build.Builder) void {
         run_cmd.addArgs(args);
     }
 
+    if (std.fs.cwd().openFile("src/user_config.zig", .{})) |_| {
+        exe.addBuildOption([]const u8, "magics_config", "user_config.zig");
+        std.debug.print("user_config.zig exists, overruling default_config.zig.\n", .{});
+    } else  |_| {
+        exe.addBuildOption([]const u8, "magics_config", "default_config.zig");
+        std.debug.print("user_config.zig doesn't exist, falling back to default_config.zig.\n", .{});
+    }
+
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 

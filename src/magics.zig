@@ -1,13 +1,13 @@
 const std = @import("std");
 const c = @import("gtk.zig");
-const MagicTrait = @import("magic_trait.zig").MagicTrait;
+pub const MagicTrait = @import("magic_trait.zig").MagicTrait;
 
-const SingleCommandMagic = struct {
+pub const SingleCommandMagic = struct {
     allocator: *std.mem.Allocator,
     title: [:0]const u8 = "<Unnamed Command>",
     command: [*:0]const u8 = "true",
 
-    fn init(allocator: *std.mem.Allocator, title: [:0]const u8, command: [*:0]const u8) !*SingleCommandMagic {
+    pub fn init(allocator: *std.mem.Allocator, title: [:0]const u8, command: [*:0]const u8) !*SingleCommandMagic {
         var result = try allocator.create(SingleCommandMagic);
         result.* = SingleCommandMagic{
             .allocator = allocator,
@@ -47,14 +47,14 @@ const SingleCommandMagic = struct {
     }
 };
 
-const InterruptibleCommandMagic = struct {
+pub const InterruptibleCommandMagic = struct {
     const Self = @This();
     allocator: *std.mem.Allocator,  
     title: [:0]const u8 = "<Unnamed Command>",
     command: [*:0]const u8 = "true",
     pid: std.os.pid_t = 0,
 
-    fn init(allocator: *std.mem.Allocator, title: [:0]const u8, command: [*:0]const u8) !*Self {
+    pub fn init(allocator: *std.mem.Allocator, title: [:0]const u8, command: [*:0]const u8) !*Self {
         var result = try allocator.create(Self);
         result.* = Self{
             .allocator = allocator,
@@ -107,7 +107,7 @@ const InterruptibleCommandMagic = struct {
     }
 };
 
-const SubmenuMagic = struct {
+pub const SubmenuMagic = struct {
     const Self = @This();
 
     allocator: *std.mem.Allocator,  
@@ -115,7 +115,7 @@ const SubmenuMagic = struct {
     entries: []MagicTrait,
 
 
-    fn init(allocator: *std.mem.Allocator, title: [:0]const u8, entries: []MagicTrait) !*Self {
+    pub fn init(allocator: *std.mem.Allocator, title: [:0]const u8, entries: []MagicTrait) !*Self {
         var entries_copy = try allocator.alloc(MagicTrait, entries.len);
         for (entries) |entry, i| entries_copy[i] = entry;
 
@@ -126,11 +126,6 @@ const SubmenuMagic = struct {
             .entries = entries_copy
         };
         return result;
-    }
-
-    fn deinit(self: *Self) void {
-        self.allocator.free(entries);
-        self.allocator.destroy(self);
     }
 
     fn activate(self: *@This(), menu: *c.GtkMenu) callconv(.C) void {
@@ -151,16 +146,3 @@ const SubmenuMagic = struct {
     }
 
 };
-
-pub fn buildMagics(allocator: *std.mem.Allocator) ![]MagicTrait {
-    var magics = try allocator.alloc(MagicTrait, 3);
-    magics[0] = MagicTrait.create(try SingleCommandMagic.init(allocator, "Hello (Command)", "echo 'Hello World'"));
-    magics[1] = MagicTrait.create(try InterruptibleCommandMagic.init(allocator, "Hello (Checkable)", "watch echo 'Hello World'"));
-    magics[2] = MagicTrait.create(try SubmenuMagic.init(allocator, "External Monitor", &.{
-        MagicTrait.create(try SingleCommandMagic.init(allocator, "Clone", "monitor-on")),
-        MagicTrait.create(try SingleCommandMagic.init(allocator, "Combine", "monitor-combine")),
-        MagicTrait.create(try SingleCommandMagic.init(allocator, "Disable", "monitor-off"))
-    }));
-
-    return magics;
-}
