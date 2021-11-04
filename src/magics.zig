@@ -36,7 +36,7 @@ pub const SingleCommandMagic = struct {
 
     pub fn addToMenu(self: *@This(), menu: *c.GtkMenu) void {
         var item = c.gtk_image_menu_item_new_with_label(self.title);
-        c.gtk_menu_shell_insert(@ptrCast(*c.GtkMenuShell, menu), item, 1);
+        c.gtk_menu_shell_insert(@ptrCast(*c.GtkMenuShell, menu), item, -1);
         c.gtk_widget_show(item);
         _ = c.g_signal_connect_swapped_1(
             item, 
@@ -96,7 +96,7 @@ pub const InterruptibleCommandMagic = struct {
     pub fn addToMenu(self: *Self, menu: *c.GtkMenu) void {
         std.debug.print("Added checkbable\n", .{});
         var item = c.gtk_check_menu_item_new_with_label(self.title);
-        c.gtk_menu_shell_insert(@ptrCast(*c.GtkMenuShell, menu), item, 1);
+        c.gtk_menu_shell_insert(@ptrCast(*c.GtkMenuShell, menu), item, -1);
         c.gtk_widget_show(item);
         _ = c.g_signal_connect_swapped_1(
             item, 
@@ -140,7 +140,7 @@ pub const SubmenuMagic = struct {
         }
 
         var item = c.gtk_image_menu_item_new_with_label(self.title);
-        c.gtk_menu_shell_insert(@ptrCast(*c.GtkMenuShell, menu), item, 1);
+        c.gtk_menu_shell_insert(@ptrCast(*c.GtkMenuShell, menu), item, -1);
         c.gtk_widget_show(item);
         c.gtk_menu_item_set_submenu(@ptrCast(*c.GtkMenuItem, item), submenu);
     }
